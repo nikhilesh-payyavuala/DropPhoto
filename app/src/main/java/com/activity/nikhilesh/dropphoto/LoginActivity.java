@@ -74,9 +74,8 @@ public class LoginActivity extends Activity {
                 if (mLoggedIn) {
                     logOut();
                 } else {
-                    // Start the remote authentication
-
-                        mApi.getSession().startOAuth2Authentication(LoginActivity.this);
+                    // Start the remote authenticatio
+                    mApi.getSession().startOAuth2Authentication(LoginActivity.this);
 
                 }
             }
@@ -133,6 +132,10 @@ public class LoginActivity extends Activity {
      * Convenience function to change UI state based on being logged in
      */
     private void setLoggedIn(boolean loggedIn) {
+        if(loggedIn){
+            Intent in = new Intent(LoginActivity.this,PictureActivity.class);
+            startActivity(in);
+        }
 
     }
 
@@ -153,13 +156,10 @@ public class LoginActivity extends Activity {
         String secret = prefs.getString(ACCESS_SECRET_NAME, null);
         if (key == null || secret == null || key.length() == 0 || secret.length() == 0) return;
 
-        if (key.equals("oauth2:")) {
+
             // If the key is set to "oauth2:", then we can assume the token is for OAuth 2.
             session.setOAuth2AccessToken(secret);
-        } else {
-            // Still support using old OAuth 1 tokens.
-            session.setAccessTokenPair(new AccessTokenPair(key, secret));
-        }
+
     }
 
     /**

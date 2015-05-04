@@ -7,7 +7,7 @@ import com.dropbox.client2.android.AndroidAuthSession;
  * Created by Nikhilesh on 5/4/15.
  */
 public class UserSingleton {
-    DropboxAPI<AndroidAuthSession> mApi;
+    static DropboxAPI<AndroidAuthSession> mApi;
     static UserSingleton user;
     public DropboxAPI<AndroidAuthSession> getmApi() {
         return mApi;
