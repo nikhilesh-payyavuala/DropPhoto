@@ -4,4 +4,9 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_picture">PictureActivity</string>
+    <string name="title_activity_download_from_drop_box">DownloadFromDropBox</string>
+
+    <string name="title_activity_image_display">ImageDisplayActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

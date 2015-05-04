@@ -40,6 +40,7 @@ public class UploadToDropBox extends AsyncTask<Void, Long, Boolean> {
     private final ProgressDialog mDialog;
 
     private String mErrorMsg;
+    private Context mActivity;
 
 
 
@@ -47,7 +48,7 @@ public class UploadToDropBox extends AsyncTask<Void, Long, Boolean> {
                          File file) {
         // We set the context this way so we don't accidentally leak activities
         mContext = context.getApplicationContext();
-
+        mActivity = context;
         mFileLen = file.length();
         mApi = api;
         mPath = dropboxPath;
@@ -149,9 +150,11 @@ public class UploadToDropBox extends AsyncTask<Void, Long, Boolean> {
         mDialog.dismiss();
         if (result) {
             showToast("Image successfully uploaded");
+
         } else {
             showToast(mErrorMsg);
         }
+
     }
 
     private void showToast(String msg) {

@@ -22,4 +22,16 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
+    <GridView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/contents"
+        android:layout_below="@+id/revoke"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/camera"
+        android:layout_weight="0.25"
+        android:numColumns="3"/>
+
+
 </RelativeLayout>

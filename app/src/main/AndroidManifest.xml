@@ -38,6 +38,16 @@
             android:name=".PictureActivity"
             android:label="@string/title_activity_picture" >
         </activity>
+        <activity
+            android:name="com.utils.dropphoto.DownloadFromDropBox"
+            android:label="@string/title_activity_download_from_drop_box" >
+        </activity>
+        <activity
+            android:name=".ImageDisplayActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_image_display"
+            android:theme="@style/FullscreenTheme" >
+        </activity>
     </application>
 
 </manifest>
