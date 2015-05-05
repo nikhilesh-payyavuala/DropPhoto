@@ -20,7 +20,8 @@
         android:text="Upload Picture"
         android:id="@+id/camera"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignRight="@+id/contents"
+        android:layout_alignEnd="@+id/contents" />
 
     <GridView
         android:layout_width="wrap_content"
@@ -32,6 +33,15 @@
         android:layout_above="@+id/camera"
         android:layout_weight="0.25"
         android:numColumns="3"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View on Map"
+        android:id="@+id/gomap"
+        android:layout_below="@+id/contents"
+        android:layout_alignRight="@+id/revoke"
+        android:layout_alignEnd="@+id/revoke" />
 
 
 </RelativeLayout>

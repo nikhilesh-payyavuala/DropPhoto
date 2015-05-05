@@ -7,6 +7,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -44,13 +51,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import com.utils.dropphoto.UploadToDropBox;
 
 
 public class PictureActivity extends ActionBarActivity {
-    Button revoke,upload;
+    Button revoke,upload,gotomap;
     GridView thumbs;
     private String mCameraFileName;
     private static final int NEW_PICTURE = 1;
@@ -61,11 +69,14 @@ public class PictureActivity extends ActionBarActivity {
     private FileOutputStream mFos;
     File mediaStorageDir;
     ArrayList<DropboxAPI.Entry> entries;
+    private ArrayList<String> paths;
+    LocationManager lm;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picture);
         //entries = new ArrayList<DropboxAPI.Entry>();
+        lm =(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         mediaStorageDir = new File(
                 Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -93,13 +104,50 @@ public class PictureActivity extends ActionBarActivity {
         upload = (Button)findViewById(R.id.camera);
         upload.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                String city = "";
+                String lati = "";
+                String longi = "";
                 Intent intent = new Intent();
                 // Picture from camera
                 intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
-                Date date = new Date();
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss", Locale.US);
 
-                String newPicFile = mediaStorageDir.getPath()+File.separator+ df.format(date) + ".jpg";
+                Criteria c=new Criteria();
+                String provider=lm.getBestProvider(c, false);
+                Location l=lm.getLastKnownLocation(provider);
+                if(l!=null)
+                {
+                    //get latitude and longitude of the location
+
+                    Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
+                    try {
+                        double lng=l.getLongitude();
+                        longi = String.valueOf(lng);
+                        double lat=l.getLatitude();
+                        lati = String.valueOf(lat);
+                        //display on text view
+
+                        List<Address> addresses = gcd.getFromLocation(lat, lng, 1);
+                        if (addresses.size() > 0) {
+                            Toast.makeText(getApplicationContext(), addresses.get(0).getLocality(), Toast.LENGTH_LONG).show();
+                            city = addresses.get(0).getLocality();
+                        }
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(),"Sorry no location obtained",Toast.LENGTH_LONG).show();
+                }
+
+                Date date = new Date();
+                DateFormat df = new SimpleDateFormat("yyyyMMddkkmmss", Locale.US);
+
+                String newPicFile = mediaStorageDir.getPath()+File.separator+ city+"_"+lati+"_"+longi+"_"+df.format(date) + ".jpg";
+                Toast.makeText(getApplicationContext(),newPicFile,Toast.LENGTH_LONG).show();
 
                 //String outPath = new File(Environment.getExternalStorageDirectory(), newPicFile).getPath();
                 File outFile = new File(newPicFile);
@@ -129,9 +177,35 @@ public class PictureActivity extends ActionBarActivity {
             }
         });
 
-        DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this,user.getmApi(),PHOTO_DIR,thumbs,mediaStorageDir.getPath());
-        dfb.execute();
+        gotomap = (Button)findViewById(R.id.gomap);
+        gotomap.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent in = new Intent(PictureActivity.this,MapsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("Coordinates", paths );
+                in.putExtras(bundle);
+                startActivity(in);
+            }
+        });
 
+        if(hasOnlineAccess()) {
+            DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs, mediaStorageDir.getPath());
+            dfb.execute();
+        }
+        else {
+            Toast.makeText(this, "Please connect to a network...!", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    protected boolean hasOnlineAccess() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -153,8 +227,13 @@ public class PictureActivity extends ActionBarActivity {
             return true;
         }
         if(id == R.id.airport_menuRefresh){
-            DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this,user.getmApi(),PHOTO_DIR,thumbs,mediaStorageDir.getPath());
-            dfb.execute();
+            if(hasOnlineAccess()) {
+                DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs, mediaStorageDir.getPath());
+                dfb.execute();
+            }
+            else {
+                Toast.makeText(this, "Please connect to a network...!", Toast.LENGTH_LONG).show();
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -175,8 +254,13 @@ public class PictureActivity extends ActionBarActivity {
                 File file = new File(mCameraFileName);
 
                 if (uri != null) {
-                    UploadToDropBox upload = new UploadToDropBox(this, user.getmApi(), PHOTO_DIR, file);
-                    upload.execute();
+                    if(hasOnlineAccess()) {
+                        UploadToDropBox upload = new UploadToDropBox(this, user.getmApi(), PHOTO_DIR, file);
+                        upload.execute();
+                    }
+                    else {
+                        Toast.makeText(this, "Please connect to a network...!", Toast.LENGTH_LONG).show();
+                    }
 
                 }
             } else {
@@ -203,7 +287,7 @@ public class PictureActivity extends ActionBarActivity {
         private Long mFileLen;
         private String mErrorMsg;
         private ArrayList<Drawable> thumbs;
-        private ArrayList<String> paths;
+
         private String imgDirPath;
 
         // Note that, since we use a single file name here for simplicity, you
