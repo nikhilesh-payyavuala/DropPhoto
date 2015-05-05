@@ -1,6 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:background="#0099cc"
+
+    android:layout_height="match_parent" android:background="@color/black_overlay"
     tools:context="com.activity.nikhilesh.dropphoto.ImageDisplayActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -14,7 +15,8 @@
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        xmlns:facebook="http://schemas.android.com/apk/res-auto">
 
         <LinearLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
             android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -25,6 +27,11 @@
             <Button android:id="@+id/dummy_button" style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="@string/dummy_button" />
+
+
+
+
+
 
         </LinearLayout>
 

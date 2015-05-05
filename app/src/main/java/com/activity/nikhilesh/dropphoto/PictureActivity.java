@@ -257,6 +257,7 @@ public class PictureActivity extends ActionBarActivity {
                     if(hasOnlineAccess()) {
                         UploadToDropBox upload = new UploadToDropBox(this, user.getmApi(), PHOTO_DIR, file);
                         upload.execute();
+
                     }
                     else {
                         Toast.makeText(this, "Please connect to a network...!", Toast.LENGTH_LONG).show();

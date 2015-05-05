@@ -8,10 +8,20 @@ import com.dropbox.client2.exception.DropboxParseException;
 import com.dropbox.client2.exception.DropboxPartialFileException;
 import com.dropbox.client2.exception.DropboxServerException;
 import com.dropbox.client2.exception.DropboxUnlinkedException;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.share.Sharer;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareButton;
+import com.facebook.share.widget.ShareDialog;
 import com.session.dropphoto.UserSingleton;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -22,6 +32,7 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,6 +55,13 @@ public class ImageDisplayActivity extends Activity {
     private final static String IMAGE_FILE_NAME = "dbroulette.png";
 
     private FileOutputStream mFos;
+
+    private Bitmap myBitmap;
+
+    private SharePhotoContent content;
+
+    ShareDialog dialog;
+    CallbackManager callbackManager;
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
@@ -75,7 +93,7 @@ public class ImageDisplayActivity extends Activity {
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final ImageView contentView = (ImageView)findViewById(R.id.fullscreen_content);
-
+        FacebookSdk.sdkInitialize(getApplicationContext());
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
@@ -135,7 +153,51 @@ public class ImageDisplayActivity extends Activity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
+        callbackManager = CallbackManager.Factory.create();
+
+        dialog = new ShareDialog(this);
+        dialog.registerCallback(callbackManager, shareCallBack);
+
+        //ShareButton shareButton = (ShareButton)findViewById(R.id.shareButton);
+        //shareButton.setShareContent(content);
+
+
+        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.dummy_button).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if( ShareDialog.canShow(SharePhotoContent.class)) {
+                    SharePhoto photo = new SharePhoto.Builder()
+                            .setBitmap(myBitmap).build();
+                    content = new SharePhotoContent.Builder()
+                            .addPhoto(photo)
+                            .build();
+                    Toast.makeText(getApplicationContext(),"HERE",Toast.LENGTH_LONG).show();
+                    dialog.show(content);
+                }
+            }
+        });
+
+    }
+    public FacebookCallback<Sharer.Result> shareCallBack = new FacebookCallback<Sharer.Result>() {
+
+
+        public void onSuccess(Sharer.Result result) {
+            Toast.makeText(getApplicationContext(),"YES",Toast.LENGTH_LONG).show();
+        }
+
+        public void onCancel() {
+        }
+
+        public void onError(FacebookException error) {
+            Toast.makeText(getApplicationContext(), "NO", Toast.LENGTH_LONG).show();
+        }
+    };
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -261,7 +323,7 @@ public class ImageDisplayActivity extends Activity {
         @Override
         protected void onPostExecute(String result) {
            File imgFile = new File(result);
-            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             v.setImageBitmap(myBitmap);
         }
     }
