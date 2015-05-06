@@ -13,4 +13,6 @@
     <string name="title_activity_maps">Map</string>
     <string name="facebook_app_id">370758463111467</string>
     <string name="title_activity_image">ImageActivity</string>
+    <string name="open_location_settings">Open Settings</string>
+    <string name="Cancel">Cancel</string>
 </resources>

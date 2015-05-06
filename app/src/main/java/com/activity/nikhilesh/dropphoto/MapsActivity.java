@@ -15,6 +15,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.utils.dropphoto.GPSTracker;
 
 import java.util.ArrayList;
 
@@ -87,20 +88,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void onMapReady(GoogleMap googleMap) {
         googleMap.setMyLocationEnabled(true);
-        Criteria c=new Criteria();
-        LocationManager lm =(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        String provider=lm.getBestProvider(c, false);
-        Location l=lm.getLastKnownLocation(provider);
-
-        Location myLocation = googleMap.getMyLocation();  //Nullpointer exception.........
-        LatLng myLatLng = new LatLng(l.getLatitude(),
-                l.getLongitude());
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                myLatLng, 16));
-        for(String path : paths){
-            //String path = e.path;
-            String[] parts = path.split("_");
-            googleMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(parts[1]), Double.parseDouble(parts[2]))).title(parts[0]+" "+parts[3]));
+        GPSTracker gpsTracker = new GPSTracker(MapsActivity.this);
+        if(gpsTracker.canGetLocation()){
+            LatLng myLatLng = new LatLng(gpsTracker.getLatitude(),
+                    gpsTracker.getLongitude());
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                    myLatLng, 16));
+            for(String path : paths){
+                //String path = e.path;
+                String[] parts = path.split("_");
+                googleMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(parts[1]), Double.parseDouble(parts[2]))).title(parts[0]+" "+parts[3]));
+            }
         }
+        else{
+            gpsTracker.showSettingsAlert();
+        }
+
+
+
     }
 }

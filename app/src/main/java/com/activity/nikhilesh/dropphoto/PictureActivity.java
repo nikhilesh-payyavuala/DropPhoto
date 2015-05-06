@@ -1,6 +1,7 @@
 package com.activity.nikhilesh.dropphoto;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -18,6 +20,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -55,6 +58,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import com.utils.dropphoto.GPSTracker;
 import com.utils.dropphoto.UploadToDropBox;
 
 
@@ -72,12 +76,15 @@ public class PictureActivity extends AppCompatActivity {
     ArrayList<DropboxAPI.Entry> entries;
     private ArrayList<String> paths;
     LocationManager lm;
+    Location l;
+    GPSTracker gpsTracker;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picture);
         //entries = new ArrayList<DropboxAPI.Entry>();
         lm =(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+
         mediaStorageDir = new File(
                 Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -90,21 +97,10 @@ public class PictureActivity extends AppCompatActivity {
 
             }
         }
-//        revoke = (Button)findViewById(R.id.revoke);
-//        revoke.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//
-//                DropboxAPI<AndroidAuthSession> mApi = user.getmApi();
-//                //Toast.makeText(getApplicationContext(),""+mApi.getSession().isLinked(),Toast.LENGTH_LONG).show();
-//                mApi.getSession().unlink();
-//                Toast.makeText(getApplicationContext(), "congrats", Toast.LENGTH_LONG).show();
-//                Intent in = new Intent(PictureActivity.this,LoginActivity.class);
-//                startActivity(in);
-//            }
-//        });
         upload = (Button)findViewById(R.id.camera);
         upload.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                gpsTracker = new GPSTracker(PictureActivity.this);
                 String city = "";
                 String lati = "";
                 String longi = "";
@@ -112,56 +108,44 @@ public class PictureActivity extends AppCompatActivity {
                 // Picture from camera
                 intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                Criteria c=new Criteria();
-                String provider=lm.getBestProvider(c, false);
-                Location l=lm.getLastKnownLocation(provider);
-                if(l!=null)
-                {
-                    //get latitude and longitude of the location
-
-                    Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
+                if (gpsTracker.canGetLocation()) {
+                    //Toast.makeText(getApplicationContext(), gpsTracker.getLatitude() + " " + gpsTracker.getLongitude(), Toast.LENGTH_LONG).show();
                     try {
-                        double lng=l.getLongitude();
-                        longi = String.valueOf(lng);
-                        double lat=l.getLatitude();
+                        Double lat = gpsTracker.getLatitude();
+                        Double lng = gpsTracker.getLongitude();
                         lati = String.valueOf(lat);
-                        //display on text view
-
+                        longi = String.valueOf(lng);
+                        Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
                         List<Address> addresses = gcd.getFromLocation(lat, lng, 1);
                         if (addresses.size() > 0) {
                             //Toast.makeText(getApplicationContext(), addresses.get(0).getLocality(), Toast.LENGTH_LONG).show();
                             city = addresses.get(0).getLocality();
                         }
                     }
-                    catch (IOException e) {
+                    catch (IOException e){
                         e.printStackTrace();
                     }
+                    Date date = new Date();
+                    DateFormat df = new SimpleDateFormat("yyyyMMddkkmmss", Locale.US);
+                    String newPicFile = mediaStorageDir.getPath() + File.separator + city + "_" + lati + "_" + longi + "_" + df.format(date) + ".jpg";
+                    //Toast.makeText(getApplicationContext(), newPicFile, Toast.LENGTH_LONG).show();
+                    File outFile = new File(newPicFile);
+                    mCameraFileName = outFile.toString();
+                    Uri outuri = Uri.fromFile(outFile);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, outuri);
+                    Log.i("Picture Activity", "Importing New Picture: " + mCameraFileName);
+                    try {
+                        startActivityForResult(intent, NEW_PICTURE);
+                    } catch (ActivityNotFoundException e) {
+                        Toast.makeText(getApplicationContext(), "There doesn't seem to be a camera.", Toast.LENGTH_SHORT).show();
+                    }
+                    gpsTracker.stopUsingGPS();
 
-
+                } else {
+                    gpsTracker.showSettingsAlert();
                 }
-                else
-                {
-                    Toast.makeText(getApplicationContext(),"Sorry no location obtained",Toast.LENGTH_LONG).show();
-                }
 
-                Date date = new Date();
-                DateFormat df = new SimpleDateFormat("yyyyMMddkkmmss", Locale.US);
 
-                String newPicFile = mediaStorageDir.getPath()+File.separator+ city+"_"+lati+"_"+longi+"_"+df.format(date) + ".jpg";
-                //Toast.makeText(getApplicationContext(),newPicFile,Toast.LENGTH_LONG).show();
-
-                //String outPath = new File(Environment.getExternalStorageDirectory(), newPicFile).getPath();
-                File outFile = new File(newPicFile);
-
-                mCameraFileName = outFile.toString();
-                Uri outuri = Uri.fromFile(outFile);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, outuri);
-                Log.i("Picture Activity", "Importing New Picture: " + mCameraFileName);
-                try {
-                    startActivityForResult(intent, NEW_PICTURE);
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(getApplicationContext(),"There doesn't seem to be a camera.",Toast.LENGTH_SHORT).show();
-                }
             }
         });
         thumbs = (ListView)findViewById(R.id.contents);
@@ -173,7 +157,7 @@ public class PictureActivity extends AppCompatActivity {
                     Intent in = new Intent(getApplicationContext(), ImageActivity.class);
                     in.putExtra("PATH",path);
                     in.putExtra("DIR",mediaStorageDir.getPath());
-                    startActivity(in);
+                startActivity(in);
 
             }
         });
@@ -190,7 +174,7 @@ public class PictureActivity extends AppCompatActivity {
         });
 
         if(hasOnlineAccess()) {
-            DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs, mediaStorageDir.getPath());
+            DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs, gotomap, mediaStorageDir.getPath());
             dfb.execute();
         }
         else {
@@ -230,7 +214,7 @@ public class PictureActivity extends AppCompatActivity {
         }
         if(id == R.id.airport_menuRefresh){
             if(hasOnlineAccess()) {
-                DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs, mediaStorageDir.getPath());
+                DownloadFromDropBox dfb = new DownloadFromDropBox(PictureActivity.this, user.getmApi(), PHOTO_DIR, thumbs,gotomap, mediaStorageDir.getPath());
                 dfb.execute();
             }
             else {
@@ -285,6 +269,7 @@ public class PictureActivity extends AppCompatActivity {
         private Drawable mDrawable;
         private PhotoGridAdapter adapter;
         private FileOutputStream mFos;
+        private Button gotomap;
 
         private boolean mCanceled;
         private Long mFileLen;
@@ -298,13 +283,14 @@ public class PictureActivity extends AppCompatActivity {
         private final static String IMAGE_FILE_NAME = "dbroulette.png";
 
         public DownloadFromDropBox(Context context, DropboxAPI<?> api,
-                                   String dropboxPath, ListView view, String imgDirPath) {
+                                   String dropboxPath, ListView view,Button gotomap, String imgDirPath) {
             // We set the context this way so we don't accidentally leak activities
             mContext = context.getApplicationContext();
             this.imgDirPath = imgDirPath;
             mApi = api;
             mPath = dropboxPath;
             mView = view;
+            this.gotomap = gotomap;
             if(context==null){
                 Log.i("HELP HERE","CONTEXT NULL");
             }
@@ -449,7 +435,11 @@ public class PictureActivity extends AppCompatActivity {
             if (result) {
                 // Set the image now that we have it
                 adapter = new PhotoGridAdapter(mContext,thumbs,entries);
+                adapter.notifyDataSetChanged();
                 mView.setAdapter(adapter);
+                if(entries.size()>0){
+                    gotomap.setEnabled(true);
+                }
 
 
             } else {

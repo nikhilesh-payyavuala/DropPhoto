@@ -135,7 +135,7 @@ public class LoginActivity extends AppCompatActivity {
     private void setLoggedIn(boolean loggedIn) {
         if(loggedIn){
             Intent in = new Intent(LoginActivity.this,PictureActivity.class);
-            in.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            //in.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(in);
             finish();
         }
