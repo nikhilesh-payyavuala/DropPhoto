@@ -7,12 +7,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.activity.nikhilesh.dropphoto.R;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.DropboxAPI.Entry;
 
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -23,12 +26,12 @@ public class PhotoGridAdapter extends BaseAdapter {
 
     Context context;
     ArrayList<Drawable> thumbs;
-
+    ArrayList<Entry> entries;
     //DropboxAPI<?> mApi;
-    public PhotoGridAdapter(Context context,ArrayList<Drawable> thumbs, ArrayList<String> paths){
+    public PhotoGridAdapter(Context context,ArrayList<Drawable> thumbs, ArrayList<Entry> entries){
         this.context = context;
         this.thumbs = thumbs;
-
+        this.entries = entries;
 
     }
 
@@ -52,6 +55,15 @@ public class PhotoGridAdapter extends BaseAdapter {
         }
         ImageView im = (ImageView)v.findViewById(R.id.grid_item_image);
         im.setImageDrawable(thumbs.get(position));
+        TextView path = (TextView)v.findViewById(R.id.path);
+        TextView type = (TextView)v.findViewById(R.id.type);
+        TextView date = (TextView)v.findViewById(R.id.date);
+        Entry e = entries.get(position);
+        path.setText(e.fileName());
+        type.setText(e.mimeType);
+        date.setText(e.modified);
+
+
         return v;
     }
 }

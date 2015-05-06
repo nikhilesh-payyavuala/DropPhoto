@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,9 +58,9 @@ import java.util.Locale;
 import com.utils.dropphoto.UploadToDropBox;
 
 
-public class PictureActivity extends ActionBarActivity {
+public class PictureActivity extends AppCompatActivity {
     Button revoke,upload,gotomap;
-    GridView thumbs;
+    ListView thumbs;
     private String mCameraFileName;
     private static final int NEW_PICTURE = 1;
     UserSingleton user = UserSingleton.getInstance();
@@ -89,18 +90,18 @@ public class PictureActivity extends ActionBarActivity {
 
             }
         }
-        revoke = (Button)findViewById(R.id.revoke);
-        revoke.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-                DropboxAPI<AndroidAuthSession> mApi = user.getmApi();
-                //Toast.makeText(getApplicationContext(),""+mApi.getSession().isLinked(),Toast.LENGTH_LONG).show();
-                mApi.getSession().unlink();
-                Toast.makeText(getApplicationContext(), "congrats", Toast.LENGTH_LONG).show();
-                Intent in = new Intent(PictureActivity.this,LoginActivity.class);
-                startActivity(in);
-            }
-        });
+//        revoke = (Button)findViewById(R.id.revoke);
+//        revoke.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//
+//                DropboxAPI<AndroidAuthSession> mApi = user.getmApi();
+//                //Toast.makeText(getApplicationContext(),""+mApi.getSession().isLinked(),Toast.LENGTH_LONG).show();
+//                mApi.getSession().unlink();
+//                Toast.makeText(getApplicationContext(), "congrats", Toast.LENGTH_LONG).show();
+//                Intent in = new Intent(PictureActivity.this,LoginActivity.class);
+//                startActivity(in);
+//            }
+//        });
         upload = (Button)findViewById(R.id.camera);
         upload.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -128,7 +129,7 @@ public class PictureActivity extends ActionBarActivity {
 
                         List<Address> addresses = gcd.getFromLocation(lat, lng, 1);
                         if (addresses.size() > 0) {
-                            Toast.makeText(getApplicationContext(), addresses.get(0).getLocality(), Toast.LENGTH_LONG).show();
+                            //Toast.makeText(getApplicationContext(), addresses.get(0).getLocality(), Toast.LENGTH_LONG).show();
                             city = addresses.get(0).getLocality();
                         }
                     }
@@ -147,7 +148,7 @@ public class PictureActivity extends ActionBarActivity {
                 DateFormat df = new SimpleDateFormat("yyyyMMddkkmmss", Locale.US);
 
                 String newPicFile = mediaStorageDir.getPath()+File.separator+ city+"_"+lati+"_"+longi+"_"+df.format(date) + ".jpg";
-                Toast.makeText(getApplicationContext(),newPicFile,Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(),newPicFile,Toast.LENGTH_LONG).show();
 
                 //String outPath = new File(Environment.getExternalStorageDirectory(), newPicFile).getPath();
                 File outFile = new File(newPicFile);
@@ -163,13 +164,13 @@ public class PictureActivity extends ActionBarActivity {
                 }
             }
         });
-        thumbs = (GridView)findViewById(R.id.contents);
+        thumbs = (ListView)findViewById(R.id.contents);
         thumbs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 String path = entries.get(position).path;
 
-                    Intent in = new Intent(getApplicationContext(), ImageDisplayActivity.class);
+                    Intent in = new Intent(getApplicationContext(), ImageActivity.class);
                     in.putExtra("PATH",path);
                     in.putExtra("DIR",mediaStorageDir.getPath());
                     startActivity(in);
@@ -214,6 +215,7 @@ public class PictureActivity extends ActionBarActivity {
         getMenuInflater().inflate(R.menu.menu_picture, menu);
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -272,14 +274,14 @@ public class PictureActivity extends ActionBarActivity {
     }
 
 
-    public class DownloadFromDropBox extends AsyncTask<Void, Long, Boolean> {
+    public class DownloadFromDropBox extends AsyncTask<Void, Void, Boolean> {
 
 
         private Context mContext;
         private final ProgressDialog mDialog;
         private DropboxAPI<?> mApi;
         private String mPath;
-        private GridView mView;
+        private ListView mView;
         private Drawable mDrawable;
         private PhotoGridAdapter adapter;
         private FileOutputStream mFos;
@@ -296,7 +298,7 @@ public class PictureActivity extends ActionBarActivity {
         private final static String IMAGE_FILE_NAME = "dbroulette.png";
 
         public DownloadFromDropBox(Context context, DropboxAPI<?> api,
-                                   String dropboxPath, GridView view, String imgDirPath) {
+                                   String dropboxPath, ListView view, String imgDirPath) {
             // We set the context this way so we don't accidentally leak activities
             mContext = context.getApplicationContext();
             this.imgDirPath = imgDirPath;
@@ -308,7 +310,7 @@ public class PictureActivity extends ActionBarActivity {
             }
 
             mDialog = new ProgressDialog(context);
-            mDialog.setMessage("Downloading Image");
+            mDialog.setMessage("Refreshing...");
             mDialog.setButton(ProgressDialog.BUTTON_POSITIVE, "Cancel", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                     mCanceled = true;
@@ -439,18 +441,14 @@ public class PictureActivity extends ActionBarActivity {
             return false;
         }
 
-        @Override
-        protected void onProgressUpdate(Long... progress) {
-            int percent = (int)(100.0*(double)progress[0]/mFileLen + 0.5);
-            mDialog.setProgress(percent);
-        }
+
 
         @Override
         protected void onPostExecute(Boolean result) {
             mDialog.dismiss();
             if (result) {
                 // Set the image now that we have it
-                adapter = new PhotoGridAdapter(mContext,thumbs,paths);
+                adapter = new PhotoGridAdapter(mContext,thumbs,entries);
                 mView.setAdapter(adapter);
 
 

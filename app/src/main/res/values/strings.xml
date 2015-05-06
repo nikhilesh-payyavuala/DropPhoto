@@ -9,6 +9,8 @@
     <string name="title_activity_image_display">ImageDisplayActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="share">Share</string>
     <string name="title_activity_maps">Map</string>
     <string name="facebook_app_id">370758463111467</string>
+    <string name="title_activity_image">ImageActivity</string>
 </resources>

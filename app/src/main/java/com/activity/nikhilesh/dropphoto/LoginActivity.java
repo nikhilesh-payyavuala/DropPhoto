@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -33,7 +34,7 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.session.dropphoto.UserSingleton;
 
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "DropPhoto";
     private static final String APP_KEY = "axqhr0qo2ar1th9";
     private static final String APP_SECRET = "kzl12w0a7gj3u6u";
@@ -134,7 +135,9 @@ public class LoginActivity extends Activity {
     private void setLoggedIn(boolean loggedIn) {
         if(loggedIn){
             Intent in = new Intent(LoginActivity.this,PictureActivity.class);
+            in.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(in);
+            finish();
         }
 
     }
